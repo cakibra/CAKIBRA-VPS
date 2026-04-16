@@ -10,6 +10,10 @@ jobs:
     permissions:
       contents: read
 
+    env:
+      NODE_ENV: development
+      NPM_CONFIG_PRODUCTION: "false"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,13 +43,24 @@ jobs:
         run: .\scripts\download-singbox.ps1
 
       - name: Install frontend dependencies
-        run: npm ci --include=dev --no-audit --no-fund
+        shell: powershell
+        run: npm install --include=dev --no-audit --no-fund
+
+      - name: Verify TypeScript compiler
+        shell: powershell
+        run: |
+          if (!(Test-Path ".\node_modules\.bin\tsc.cmd")) {
+            Write-Error "TypeScript compiler was not installed"
+            exit 1
+          }
 
       - name: Type check
-        run: npx tsc --noEmit
+        shell: powershell
+        run: .\node_modules\.bin\tsc.cmd --noEmit
 
       - name: Build Tauri app
-        run: npm run tauri build -- --bundles nsis
+        shell: powershell
+        run: .\node_modules\.bin\tauri.cmd build -- --bundles nsis
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
