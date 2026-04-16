@@ -17,7 +17,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20
           cache: npm
 
       - name: Setup Rust
@@ -26,14 +26,20 @@ jobs:
       - name: Cache Rust
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: './src-tauri -> target'
+          workspaces: "./src-tauri -> target"
+
+      - name: Clean uploaded local folders
+        shell: powershell
+        run: |
+          if (Test-Path node_modules) { Remove-Item -Recurse -Force node_modules }
+          if (Test-Path dist) { Remove-Item -Recurse -Force dist }
 
       - name: Download sing-box sidecar
         shell: powershell
         run: .\scripts\download-singbox.ps1
 
       - name: Install frontend dependencies
-        run: npm install
+        run: npm ci --no-audit --no-fund
 
       - name: Type check
         run: npm run lint:check
